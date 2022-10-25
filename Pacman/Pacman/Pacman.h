@@ -34,6 +34,12 @@ private:
 	// Position for String
 	Vector2* _stringPosition;
 
+	//Data for Pause Menu
+	Texture2D* _menuBackground;
+	Rect* _menuRectangle;
+	Vector2* _menuStringPosition;
+	bool _paused;
+
 public:
 	/// <summary> Constructs the Pacman class. </summary>
 	Pacman(int argc, char* argv[]);
