@@ -1,12 +1,13 @@
 #include "Pacman.h"
 
 #include <sstream>
-
+using namespace std;
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.5f)
 {
 	_frameCount = 0;
 	_paused = false;
-
+	_pKeyDown = false;
+	space_key_down = false;
 	//Initialise important Game aspects
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
 	Input::Initialise();
@@ -44,9 +45,16 @@ void Pacman::LoadContent()
 
 	//set Menu Params
 	_menuBackground = new Texture2D();
-	_menuBackground->Load("Textures/Transparancy.png", false);
+	_menuBackground->Load("Textures/Transparency.png", false);
 	_menuRectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
 	_menuStringPosition = new Vector2(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
+	
+	//start params
+	start_background = new Texture2D();
+	start_background->Load("Textures/Transparency.png",true);
+	start_rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
+	start_string_position = new Vector2(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
+
 }
 
 void Pacman::Update(int elapsedTime)
@@ -54,36 +62,58 @@ void Pacman::Update(int elapsedTime)
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
 
-	// Checks if D key is pressed
-	if (keyboardState->IsKeyDown(Input::Keys::D))
+	
+	if (keyboardState->IsKeyDown(Input::VK_SPACE))
 	{
-		_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-		//_playerSourceRect->Y = 00.0f;
-
-
-	}
-	if (keyboardState->IsKeyDown(Input::Keys::W))
-	{
-		_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-		//_playerSourceRect->Y = 96.0f;
-
-
-	}
-	if (keyboardState->IsKeyDown(Input::Keys::S))
-	{
-		_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-		//_playerSourceRect->Y = 32.0f;
-
-
-	}
-	if (keyboardState->IsKeyDown(Input::Keys::A))
-	{
-		_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-		//_playerSourceRect->Y = 64.0f;
-
 
 	}
 
+
+	if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
+	{
+		_pKeyDown = true;
+		_paused = !_paused;
+	}
+
+
+	if (keyboardState->IsKeyUp(Input::Keys::P))
+		_pKeyDown = false;
+
+	if (!_paused)
+	{
+		_frameCount++;
+		// Checks if D key is pressed
+		if (keyboardState->IsKeyDown(Input::Keys::D))
+		{
+			_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+			//_playerSourceRect->Y = 00.0f;
+
+
+		}
+		if (keyboardState->IsKeyDown(Input::Keys::W))
+		{
+			_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+			//_playerSourceRect->Y = 96.0f;
+
+
+		}
+		if (keyboardState->IsKeyDown(Input::Keys::S))
+		{
+			_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+			//_playerSourceRect->Y = 32.0f;
+
+
+		}
+		if (keyboardState->IsKeyDown(Input::Keys::A))
+		{
+			_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+			//_playerSourceRect->Y = 64.0f;
+
+
+		}
+
+		
+	}
 	if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
 	_playerPosition->X = 0;
 	
@@ -102,7 +132,13 @@ void Pacman::Update(int elapsedTime)
 void Pacman::Draw(int elapsedTime)
 {
 	// Allows us to easily create a string
-	std::stringstream stream;
+	stringstream stream;
+
+
+
+
+
+
 	stream << "Player X: " << _playerPosition->X << " Y: " << _playerPosition->Y;
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
@@ -113,7 +149,7 @@ void Pacman::Draw(int elapsedTime)
 		// Draws Red Munchie
 		SpriteBatch::Draw(_munchieInvertedTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 
-		_frameCount++;
+		//_frameCount++;
 	}
 	else
 	{
@@ -125,8 +161,23 @@ void Pacman::Draw(int elapsedTime)
 		if (_frameCount >= 60)
 			_frameCount = 0;
 	}
+	stringstream start_stream;
+	start_stream << "START!";
+
+	SpriteBatch::Draw(start_background, start_rectangle, nullptr);
+	SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
+	
+
 	
 	// Draws String
 	SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::Green);
+	if (_paused)
+	{
+		stringstream menu_stream;
+		menu_stream << "PAUSED!";
+
+		SpriteBatch::Draw(_menuBackground, _menuRectangle, nullptr);
+		SpriteBatch::DrawString(menu_stream.str().c_str(), _menuStringPosition, Color::Red);
+	}
 	SpriteBatch::EndDraw(); // Ends Drawing
 }

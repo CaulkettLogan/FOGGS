@@ -39,6 +39,13 @@ private:
 	Rect* _menuRectangle;
 	Vector2* _menuStringPosition;
 	bool _paused;
+	bool _pKeyDown;
+	
+	Texture2D* start_background;
+	Rect* start_rectangle;
+	Vector2* start_string_position;
+	bool space_key_down;
+
 
 public:
 	/// <summary> Constructs the Pacman class. </summary>
