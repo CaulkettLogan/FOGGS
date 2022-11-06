@@ -2,12 +2,18 @@
 
 #include <sstream>
 using namespace std;
+
+
+
+
+
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.5f)
 {
 	_frameCount = 0;
 	_paused = false;
 	_pKeyDown = false;
 	space_key_down = false;
+	start = false;
 	//Initialise important Game aspects
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
 	Input::Initialise();
@@ -29,9 +35,9 @@ void Pacman::LoadContent()
 {
 	// Load Pacman
 	_playerTexture = new Texture2D();
-	_playerTexture->Load("Textures/Pacman.tga", false);
+	_playerTexture->Load("Textures/skeleton.png", false);
 	_playerPosition = new Vector2(350.0f, 350.0f);
-	_playerSourceRect = new Rect(0.0f, 0.0f, 32, 32);
+	_playerSourceRect = new Rect(0.0f, 0.0f, 64, 64);
 
 	// Load Munchie
 	_munchieBlueTexture = new Texture2D();
@@ -57,17 +63,25 @@ void Pacman::LoadContent()
 
 }
 
+
 void Pacman::Update(int elapsedTime)
 {
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
 
-	
-	if (keyboardState->IsKeyDown(Input::VK_SPACE))
+
+	if (!start)
 	{
+		if (keyboardState->IsKeyDown(Input::Keys::SPACE))
+		{
 
+			space_key_down = true;
+			start = !start;
+
+		}
+		if (keyboardState->IsKeyUp(Input::Keys::SPACE))
+			space_key_down = false;
 	}
-
 
 	if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
 	{
@@ -112,21 +126,21 @@ void Pacman::Update(int elapsedTime)
 
 		}
 
-		
 	}
-	if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
-	_playerPosition->X = 0;
 	
-	if (_playerPosition->X  < 0)//left
-		_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
-	
-	if (_playerPosition->Y  + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
-	_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
-	
-	if (_playerPosition->Y < 0)//top
-	_playerPosition->Y = 0;
-	
+		if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
+			_playerPosition->X = 0;
 
+		if (_playerPosition->X < 0)//left
+			_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
+
+		if (_playerPosition->Y + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
+			_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
+
+		if (_playerPosition->Y < 0)//top
+			_playerPosition->Y = 0;
+	
+	
 }
 
 void Pacman::Draw(int elapsedTime)
@@ -135,11 +149,9 @@ void Pacman::Draw(int elapsedTime)
 	stringstream stream;
 
 
-
-
-
-
 	stream << "Player X: " << _playerPosition->X << " Y: " << _playerPosition->Y;
+	
+	
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
 	SpriteBatch::Draw(_playerTexture, _playerPosition, _playerSourceRect); // Draws Pacman
@@ -161,12 +173,18 @@ void Pacman::Draw(int elapsedTime)
 		if (_frameCount >= 60)
 			_frameCount = 0;
 	}
-	stringstream start_stream;
-	start_stream << "START!";
-
-	SpriteBatch::Draw(start_background, start_rectangle, nullptr);
-	SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
 	
+
+	if (!start)
+	{
+		
+
+		stringstream start_stream;
+		start_stream << "START!";
+
+		SpriteBatch::Draw(start_background, start_rectangle, nullptr);
+		SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
+	}
 
 	
 	// Draws String

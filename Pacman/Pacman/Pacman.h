@@ -45,6 +45,8 @@ private:
 	Rect* start_rectangle;
 	Vector2* start_string_position;
 	bool space_key_down;
+	bool start;
+	
 
 
 public:
