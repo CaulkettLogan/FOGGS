@@ -47,7 +47,13 @@ private:
 	bool space_key_down;
 	bool start;
 	
+	//animation variables PLAYER
+	int player_direction;
+	int player_frame;
+	int player_current_frame_time;
+	const int cplayer_frame_time;
 
+	//animation variables MUNCHIE
 
 public:
 	/// <summary> Constructs the Pacman class. </summary>

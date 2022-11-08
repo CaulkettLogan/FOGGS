@@ -7,13 +7,16 @@ using namespace std;
 
 
 
-Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.5f)
+Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.5f),cplayer_frame_time(250)
 {
 	_frameCount = 0;
 	_paused = false;
 	_pKeyDown = false;
 	space_key_down = false;
 	start = false;
+	player_direction = 0;
+	player_current_frame_time = 0;
+	player_frame = 0;
 	//Initialise important Game aspects
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
 	Input::Initialise();
@@ -68,79 +71,86 @@ void Pacman::Update(int elapsedTime)
 {
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
-
+	
 
 	if (!start)
 	{
+		
 		if (keyboardState->IsKeyDown(Input::Keys::SPACE))
 		{
-
 			space_key_down = true;
 			start = !start;
-
 		}
 		if (keyboardState->IsKeyUp(Input::Keys::SPACE))
 			space_key_down = false;
 	}
+	else
+	{ 
 
-	if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
-	{
-		_pKeyDown = true;
-		_paused = !_paused;
-	}
-
-
-	if (keyboardState->IsKeyUp(Input::Keys::P))
-		_pKeyDown = false;
-
-	if (!_paused)
-	{
-		_frameCount++;
-		// Checks if D key is pressed
-		if (keyboardState->IsKeyDown(Input::Keys::D))
+		if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
 		{
-			_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-			//_playerSourceRect->Y = 00.0f;
-
-
-		}
-		if (keyboardState->IsKeyDown(Input::Keys::W))
-		{
-			_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-			//_playerSourceRect->Y = 96.0f;
-
-
-		}
-		if (keyboardState->IsKeyDown(Input::Keys::S))
-		{
-			_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-			//_playerSourceRect->Y = 32.0f;
-
-
-		}
-		if (keyboardState->IsKeyDown(Input::Keys::A))
-		{
-			_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-			//_playerSourceRect->Y = 64.0f;
-
-
+			_pKeyDown = true;
+			_paused = !_paused;
 		}
 
-	}
+		if (keyboardState->IsKeyUp(Input::Keys::P))
+			_pKeyDown = false;
+
+		if (!_paused)
+		{
+			_frameCount++;
+			// Checks if D key is pressed
+			if ((keyboardState->IsKeyDown(Input::Keys::D)) || (keyboardState->IsKeyDown(Input::Keys::RIGHT))) //if D or right is pressed, the player moves to the right
+			{
+				_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+				player_direction = 3;
+			}
+			else if ((keyboardState->IsKeyDown(Input::Keys::W)) || (keyboardState->IsKeyDown(Input::Keys::UP)))
+			{
+				_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+				//_playerSourceRect->Y = 96.0f;
+				player_direction = 0;
+			}	
+			else if ((keyboardState->IsKeyDown(Input::Keys::S)) || (keyboardState->IsKeyDown(Input::Keys::DOWN)))
+			{
+				_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+				player_direction = 2;
+			}
+			else if ((keyboardState->IsKeyDown(Input::Keys::A)) || (keyboardState->IsKeyDown(Input::Keys::LEFT)))
+			{
+				_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
+				//_playerSourceRect->Y = 64.0f;
+				player_direction = 1;
+			}
+		
+		}
 	
+		player_current_frame_time += elapsedTime;
+		_playerSourceRect->Y = _playerSourceRect->Height * player_direction;
+		if (player_current_frame_time > cplayer_frame_time)
+		{
+			player_frame++;
+
+			if (player_frame > 2)
+				player_frame = 0;
+
+			player_current_frame_time = 0;
+		}
+		_playerSourceRect->X = _playerSourceRect->Width * player_frame;
+
 		if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
-			_playerPosition->X = 0;
+				_playerPosition->X = 0;
 
 		if (_playerPosition->X < 0)//left
-			_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
+				_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
 
 		if (_playerPosition->Y + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
-			_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
+				_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
 
 		if (_playerPosition->Y < 0)//top
-			_playerPosition->Y = 0;
-	
-	
+				_playerPosition->Y = 0;
+
+	}
 }
 
 void Pacman::Draw(int elapsedTime)
@@ -177,7 +187,7 @@ void Pacman::Draw(int elapsedTime)
 
 	if (!start)
 	{
-		
+
 
 		stringstream start_stream;
 		start_stream << "START!";
