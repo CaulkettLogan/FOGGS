@@ -1,4 +1,4 @@
-#include "Pacman.h"
+#include "Player.h"
 
 #include <sstream>
 using namespace std;
@@ -7,7 +7,7 @@ using namespace std;
 
 
 
-Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500)
+Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500)
 {
 	_frameCount = 0;
 	_paused = false;
@@ -17,15 +17,17 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),c
 	player_direction = 0;
 	player_current_frame_time = 0;
 	player_frame = 0;
+	munchie_current_frame_time = 0;
+	munchie_frame = 0;
 	//Initialise important Game aspects
-	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
+	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Player", 60);
 	Input::Initialise();
 
 	// Start the Game Loop - This calls Update and Draw in game loop
 	Graphics::StartGameLoop();
 }
 
-Pacman::~Pacman()
+Player::~Player()
 {
 	delete _playerTexture;
 	delete _playerSourceRect;
@@ -34,9 +36,9 @@ Pacman::~Pacman()
 	delete _munchieRect;
 }
 
-void Pacman::LoadContent()
+void Player::LoadContent()
 {
-	// Load Pacman
+	// Load Player
 	_playerTexture = new Texture2D();
 	_playerTexture->Load("Textures/skeleton.png", false);
 	_playerPosition = new Vector2(350.0f, 350.0f);
@@ -44,12 +46,14 @@ void Pacman::LoadContent()
 
 	// Load Munchie
 	_munchieBlueTexture = new Texture2D();
-	_munchieBlueTexture->Load("Textures/Munchie.tga", true);
-	_munchieInvertedTexture = new Texture2D();
-	_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
-	_munchieRect = new Rect(100.0f, 450.0f, 12, 12);
+	_munchieBlueTexture->Load("Textures/Munchie.png", false);
+	_munchieRect = new Rect(0.0f, 0.0f, 12, 12);
+	_munchiePosition = new Vector2(100.0f, 100.0f);
+	//_munchieInvertedTexture = new Texture2D();
+	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
+	
 	//munchie animation
-	munchie_current_frame_time = 0;
+
 
 
 	// Set string position
@@ -70,7 +74,7 @@ void Pacman::LoadContent()
 }
 
 
-void Pacman::Update(int elapsedTime)
+void Player::Update(int elapsedTime)
 {
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
@@ -78,101 +82,132 @@ void Pacman::Update(int elapsedTime)
 
 	if (!start)
 	{
-		
-		if (keyboardState->IsKeyDown(Input::Keys::SPACE))
-		{
-			space_key_down = true;
-			start = !start;
-		}
-		if (keyboardState->IsKeyUp(Input::Keys::SPACE))
-			space_key_down = false;
+		CheckStart(keyboardState, Input::Keys::SPACE);
+
 	}
 	else
 	{
 
-		if (keyboardState->IsKeyDown(Input::Keys::P) && !_pKeyDown)
-		{
-			_pKeyDown = true;
-			_paused = !_paused;
-		}
+		CheckPaused(keyboardState, Input::Keys::P);
 
-		if (keyboardState->IsKeyUp(Input::Keys::P)) 
-			_pKeyDown = false;
-
-			munchie_current_frame_time += elapsedTime;
-
-		if (munchie_current_frame_time > cMunchie_Frame_Time)
-		{
-			_frameCount++;
-			if (_frameCount >= 2)
-				_frameCount = 0;
-			munchie_current_frame_time = 0;
-
-		}
-
-		
 		if (!_paused)
 		{
-			_frameCount++;
-			// Checks if D key is pressed
-			if ((keyboardState->IsKeyDown(Input::Keys::D)) || (keyboardState->IsKeyDown(Input::Keys::RIGHT))) //if D or right is pressed, the player moves to the right
-			{
-				_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-				player_direction = 3;
-			}
-			else if ((keyboardState->IsKeyDown(Input::Keys::W)) || (keyboardState->IsKeyDown(Input::Keys::UP)))
-			{
-				_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-				//_playerSourceRect->Y = 96.0f;
-				player_direction = 0;
-			}
-			else if ((keyboardState->IsKeyDown(Input::Keys::S)) || (keyboardState->IsKeyDown(Input::Keys::DOWN)))
-			{
-				_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-				player_direction = 2;
-			}
-			else if ((keyboardState->IsKeyDown(Input::Keys::A)) || (keyboardState->IsKeyDown(Input::Keys::LEFT)))
-			{
-				_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
-				//_playerSourceRect->Y = 64.0f;
-				player_direction = 1;
-
-			}
-
-		
-
-			player_current_frame_time += elapsedTime;
-			_playerSourceRect->Y = _playerSourceRect->Height * player_direction;
-			if (player_current_frame_time > cplayer_frame_time)
-			{
-				player_frame++;
-
-				if (player_frame > 2)
-					player_frame = 0;
-
-				player_current_frame_time = 0;
-			}
+			Input(elapsedTime, keyboardState);
+			UpdateMunchie(elapsedTime);
+			UpdatePlayer(elapsedTime);
+			CheckViewportCollision();
 	    }
-		_playerSourceRect->X = _playerSourceRect->Width * player_frame;
-
-		if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
-				_playerPosition->X = 0;
-
-		if (_playerPosition->X < 0)//left
-				_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
-
-		if (_playerPosition->Y + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
-				_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
-
-		if (_playerPosition->Y < 0)//top
-				_playerPosition->Y = 0;
-
+		
+		
 	}
 
 
 }
+void Player::CheckViewportCollision()
+{
+	_playerSourceRect->X = _playerSourceRect->Width * player_frame;
 
-void Pacman::Draw(int elapsedTime)
+	if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
+		_playerPosition->X = 0;
+
+	if (_playerPosition->X < 0)//left
+		_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
+
+	if (_playerPosition->Y + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
+		_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
+
+	if (_playerPosition->Y < 0)//top
+		_playerPosition->Y = 0;
+
+}
+
+void Player::UpdateMunchie(int elapsedTime)
+{
+
+	munchie_current_frame_time += elapsedTime;
+	if (munchie_current_frame_time > cMunchie_Frame_Time)
+	{
+		munchie_frame++;
+
+		if (munchie_frame >= 2)
+			munchie_frame = 0;
+
+		munchie_current_frame_time = 0;
+
+	}
+	_munchieRect->X = _munchieRect->Width * munchie_frame;
+}
+
+void Player::UpdatePlayer(int elapsedTime)
+{
+	player_current_frame_time += elapsedTime;
+	_playerSourceRect->Y = _playerSourceRect->Height * player_direction;
+	if (player_current_frame_time > cplayer_frame_time)
+	{
+		player_frame++;
+
+		if (player_frame > 2)
+			player_frame = 0;
+
+		player_current_frame_time = 0;
+	}
+}
+
+void Player::CheckStart(Input::KeyboardState* state, Input::Keys startKey)
+{
+	if (state->IsKeyDown(Input::Keys::SPACE))
+	{
+		space_key_down = true;
+		start = !start;
+	}
+	if (state->IsKeyUp(Input::Keys::SPACE))
+		space_key_down = false;
+}
+
+void Player::CheckPaused(Input::KeyboardState* state, Input::Keys P)
+{
+
+
+	if (state->IsKeyDown(Input::Keys::P) && !_pKeyDown)
+	{
+		_pKeyDown = true;
+		_paused = !_paused;
+	}
+
+	if (state->IsKeyUp(Input::Keys::P))
+		_pKeyDown = false;
+}
+
+void Player::Input(int elapsedTime, Input::KeyboardState* state)
+{
+	_frameCount++;
+	// Checks if D key is pressed
+	if ((state->IsKeyDown(Input::Keys::D)) || (state->IsKeyDown(Input::Keys::RIGHT))) //if D or right is pressed, the player moves to the right
+	{
+		_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		player_direction = 3;
+	}
+	else if ((state->IsKeyDown(Input::Keys::W)) || (state->IsKeyDown(Input::Keys::UP)))
+	{
+		_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		//_playerSourceRect->Y = 96.0f;
+		player_direction = 0;
+	}
+	else if ((state->IsKeyDown(Input::Keys::S)) || (state->IsKeyDown(Input::Keys::DOWN)))
+	{
+		_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		player_direction = 2;
+	}
+	else if ((state->IsKeyDown(Input::Keys::A)) || (state->IsKeyDown(Input::Keys::LEFT)))
+	{
+		_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		//_playerSourceRect->Y = 64.0f;
+		player_direction = 1;
+
+	}
+}
+
+void Player::Draw(int elapsedTime)
 {
 	// Allows us to easily create a string
 	stringstream stream;
@@ -183,20 +218,20 @@ void Pacman::Draw(int elapsedTime)
 	
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
-	SpriteBatch::Draw(_playerTexture, _playerPosition, _playerSourceRect); // Draws Pacman
+	SpriteBatch::Draw(_playerTexture, _playerPosition, _playerSourceRect); // Draws Player
 
-	if (_frameCount < 30)
+	if (_frameCount < 0)
 	{
 		// Draws Red Munchie
-		SpriteBatch::Draw(_munchieInvertedTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-
+		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 		//_frameCount++;
 	}
 	else
 	{
 		// Draw Blue Munchie
-		SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		
+		//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//_frameCount++;
 
 		if (_frameCount >= 60)

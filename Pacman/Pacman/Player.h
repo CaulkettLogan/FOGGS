@@ -14,13 +14,13 @@
 // Reduces the amount of typing by including all classes in S2D namespace
 using namespace S2D;
 
-// Declares the Pacman class which inherits from the Game class.
+// Declares the Player class which inherits from the Game class.
 // This allows us to overload the Game class methods to help us
 // load content, draw and update our game.
-class Pacman : public Game
+class Player : public Game
 {
 private:
-	// Data to represent Pacman
+	// Data to represent Player
 	Vector2* _playerPosition;
 	Rect* _playerSourceRect;
 	Texture2D* _playerTexture;
@@ -28,6 +28,7 @@ private:
 	// Data to represent Munchie
 	int _frameCount;
 	Rect* _munchieRect;
+	Vector2* _munchiePosition;
 	Texture2D* _munchieBlueTexture;
 	Texture2D* _munchieInvertedTexture;
 	const float _cPlayerSpeed;
@@ -56,15 +57,29 @@ private:
 	const int cMunchie_Frame_Time;
 	int munchie_frame;
 	int munchie_current_frame_time;
+	Rect* _munchiesourceRect;
 
 	//animation variables MUNCHIE
 
 public:
-	/// <summary> Constructs the Pacman class. </summary>
-	Pacman(int argc, char* argv[]);
+	/// <summary> Constructs the Player class. </summary>
+	Player(int argc, char* argv[]);
 
-	/// <summary> Destroys any data associated with Pacman class. </summary>
-	virtual ~Pacman();
+	void Input(int elapsedTime, Input::KeyboardState* state);
+
+	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
+
+	void CheckViewportCollision();
+
+	void UpdatePlayer(int elapsedTime);
+
+	void UpdateMunchie(int elapsedTime);
+	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
+
+
+
+	/// <summary> Destroys any data associated with Player class. </summary>
+	virtual ~Player();
 
 	/// <summary> All content should be loaded in this method. </summary>
 	void virtual LoadContent();
