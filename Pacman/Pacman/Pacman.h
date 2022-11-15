@@ -52,6 +52,10 @@ private:
 	int player_frame;
 	int player_current_frame_time;
 	const int cplayer_frame_time;
+	//animation variables MUNCHIE
+	const int cMunchie_Frame_Time;
+	int munchie_frame;
+	int munchie_current_frame_time;
 
 	//animation variables MUNCHIE
 

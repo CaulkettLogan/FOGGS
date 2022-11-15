@@ -7,7 +7,7 @@ using namespace std;
 
 
 
-Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.5f),cplayer_frame_time(250)
+Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500)
 {
 	_frameCount = 0;
 	_paused = false;
@@ -48,6 +48,9 @@ void Pacman::LoadContent()
 	_munchieInvertedTexture = new Texture2D();
 	_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 	_munchieRect = new Rect(100.0f, 450.0f, 12, 12);
+	//munchie animation
+	munchie_current_frame_time = 0;
+
 
 	// Set string position
 	_stringPosition = new Vector2(10.0f, 25.0f);
@@ -71,7 +74,7 @@ void Pacman::Update(int elapsedTime)
 {
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
-	
+	Input::MouseState* mouse_state = Input::Mouse::GetState();
 
 	if (!start)
 	{
@@ -93,9 +96,21 @@ void Pacman::Update(int elapsedTime)
 			_paused = !_paused;
 		}
 
-		if (keyboardState->IsKeyUp(Input::Keys::P))
+		if (keyboardState->IsKeyUp(Input::Keys::P)) 
 			_pKeyDown = false;
 
+			munchie_current_frame_time += elapsedTime;
+
+		if (munchie_current_frame_time > cMunchie_Frame_Time)
+		{
+			_frameCount++;
+			if (_frameCount >= 2)
+				_frameCount = 0;
+			munchie_current_frame_time = 0;
+
+		}
+
+		
 		if (!_paused)
 		{
 			_frameCount++;
@@ -121,6 +136,7 @@ void Pacman::Update(int elapsedTime)
 				_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Pacman across X axis
 				//_playerSourceRect->Y = 64.0f;
 				player_direction = 1;
+
 			}
 
 		
@@ -152,6 +168,8 @@ void Pacman::Update(int elapsedTime)
 				_playerPosition->Y = 0;
 
 	}
+
+
 }
 
 void Pacman::Draw(int elapsedTime)
@@ -179,7 +197,7 @@ void Pacman::Draw(int elapsedTime)
 		// Draw Blue Munchie
 		SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		
-		_frameCount++;
+		//_frameCount++;
 
 		if (_frameCount >= 60)
 			_frameCount = 0;
