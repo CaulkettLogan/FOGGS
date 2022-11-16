@@ -24,14 +24,24 @@ private:
 	Vector2* _playerPosition;
 	Rect* _playerSourceRect;
 	Texture2D* _playerTexture;
-
+	const float _cPlayerSpeed;
+	
 	// Data to represent Munchie
 	int _frameCount;
 	Rect* _munchieRect;
 	Vector2* _munchiePosition;
 	Texture2D* _munchieBlueTexture;
 	Texture2D* _munchieInvertedTexture;
-	const float _cPlayerSpeed;
+	
+	
+	//data for cherry
+	Texture2D* cherryTexture;
+	Vector2* cherryPosition;
+	Rect* cherryRect;
+	
+
+	
+	
 	// Position for String
 	Vector2* _stringPosition;
 
@@ -42,6 +52,7 @@ private:
 	bool _paused;
 	bool _pKeyDown;
 	
+	//start screen
 	Texture2D* start_background;
 	Rect* start_rectangle;
 	Vector2* start_string_position;
@@ -53,11 +64,18 @@ private:
 	int player_frame;
 	int player_current_frame_time;
 	const int cplayer_frame_time;
+	
 	//animation variables MUNCHIE
 	const int cMunchie_Frame_Time;
 	int munchie_frame;
 	int munchie_current_frame_time;
 	Rect* _munchiesourceRect;
+	
+	//Cherry animation
+	const int cCherry_frame_time;
+	int cherry_frame;
+	int cherry_current_frame_time;
+	Rect* _cherrysourceRect;
 
 	//animation variables MUNCHIE
 
@@ -74,9 +92,10 @@ public:
 	void UpdatePlayer(int elapsedTime);
 
 	void UpdateMunchie(int elapsedTime);
+
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 
-
+	void UpdateCherry(int elapsedTime);
 
 	/// <summary> Destroys any data associated with Player class. </summary>
 	virtual ~Player();

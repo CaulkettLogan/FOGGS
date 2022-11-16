@@ -7,18 +7,27 @@ using namespace std;
 
 
 
-Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500)
+Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500),cCherry_frame_time(500)
 {
 	_frameCount = 0;
+	
+	// for PAUSE
 	_paused = false;
 	_pKeyDown = false;
+	
+	//FOR START
 	space_key_down = false;
 	start = false;
+	
+	//for Player animatoin
 	player_direction = 0;
 	player_current_frame_time = 0;
 	player_frame = 0;
+	
+	//Munchie animation
 	munchie_current_frame_time = 0;
 	munchie_frame = 0;
+
 	//Initialise important Game aspects
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Player", 60);
 	Input::Initialise();
@@ -52,7 +61,11 @@ void Player::LoadContent()
 	//_munchieInvertedTexture = new Texture2D();
 	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 	
-	//munchie animation
+	//Load Cherry
+	cherryTexture = new Texture2D();
+	cherryTexture->Load("Textures/MainCherry.png",false);
+	cherryRect = new Rect(0.0f, 0.0f, 32, 32);
+	cherryPosition = new Vector2(200.0f, 200.0f);
 
 
 
@@ -96,6 +109,7 @@ void Player::Update(int elapsedTime)
 			UpdateMunchie(elapsedTime);
 			UpdatePlayer(elapsedTime);
 			CheckViewportCollision();
+			UpdateCherry(elapsedTime);
 	    }
 		
 		
@@ -120,6 +134,27 @@ void Player::CheckViewportCollision()
 		_playerPosition->Y = 0;
 
 }
+
+
+void Player::UpdateCherry(int elapsedTime)
+{
+
+	cherry_current_frame_time += elapsedTime;
+	if (cherry_current_frame_time > cCherry_frame_time)
+	{
+		cherry_frame++;
+
+		if (cherry_frame >= 2)
+			cherry_frame = 0;
+
+		cherry_current_frame_time = 0;
+
+	}
+	cherryRect->X = cherryRect->Width * cherry_frame;
+}
+
+
+
 
 void Player::UpdateMunchie(int elapsedTime)
 {
@@ -224,6 +259,7 @@ void Player::Draw(int elapsedTime)
 	{
 		// Draws Red Munchie
 		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 		//_frameCount++;
 	}
@@ -232,13 +268,14 @@ void Player::Draw(int elapsedTime)
 		// Draw Blue Munchie
 		//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//_frameCount++;
 
 		if (_frameCount >= 60)
 			_frameCount = 0;
 	}
 	
-
+	//START
 	if (!start)
 	{
 
@@ -249,6 +286,9 @@ void Player::Draw(int elapsedTime)
 		SpriteBatch::Draw(start_background, start_rectangle, nullptr);
 		SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
 	}
+
+	//draws Cherry
+
 
 	
 	// Draws String
