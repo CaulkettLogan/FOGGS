@@ -128,6 +128,7 @@ namespace S2D
 			///
 			/// <returns>	true if key down, false if not. </returns>
 			bool IsKeyDown(Keys key);
+			bool IsButtonDown(MouseState mousestate);
 
 			/// <summary>	Query if 'key' is  up. </summary>
 			///

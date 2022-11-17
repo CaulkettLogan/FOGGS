@@ -6,11 +6,13 @@ using namespace std;
 
 
 
-
-Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),cplayer_frame_time(250),cMunchie_Frame_Time(500),cCherry_frame_time(500)
+Player::Player(int argc, char* argv[]) : Game(argc, argv), cCherry_frame_time(500)
 {
 	_frameCount = 0;
 	
+	//Start player
+	_Player = new player();
+	_munchie = new munchie();
 	// for PAUSE
 	_paused = false;
 	_pKeyDown = false;
@@ -20,13 +22,13 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),c
 	start = false;
 	
 	//for Player animatoin
-	player_direction = 0;
-	player_current_frame_time = 0;
-	player_frame = 0;
+	_Player->direction = 0;
+	_Player->current_frame_time = 0;
+	_Player->frame = 0;
 	
 	//Munchie animation
-	munchie_current_frame_time = 0;
-	munchie_frame = 0;
+	_munchie->current_frame_time = 0;
+	_frameCount = 0;
 
 	//Initialise important Game aspects
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Player", 60);
@@ -38,26 +40,27 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), _cPlayerSpeed(0.3f),c
 
 Player::~Player()
 {
-	delete _playerTexture;
-	delete _playerSourceRect;
-	delete _munchieBlueTexture;
-	delete _munchieInvertedTexture;
-	delete _munchieRect;
+	delete _Player->Texture;
+	delete _Player->SourceRect;
+	delete _munchie->BlueTexture;
+	//delete _munchieInvertedTexture;
+	delete _munchie->Rect;
+	delete _Player->Position;
 }
 
 void Player::LoadContent()
 {
 	// Load Player
-	_playerTexture = new Texture2D();
-	_playerTexture->Load("Textures/skeleton.png", false);
-	_playerPosition = new Vector2(350.0f, 350.0f);
-	_playerSourceRect = new Rect(0.0f, 0.0f, 64, 64);
+	_Player->Texture = new Texture2D();
+	_Player->Texture->Load("Textures/skeleton.png", false);
+	_Player->Position = new Vector2(350.0f, 350.0f);
+	_Player->SourceRect = new Rect(0.0f, 0.0f, 64, 64);
 
 	// Load Munchie
-	_munchieBlueTexture = new Texture2D();
-	_munchieBlueTexture->Load("Textures/Munchie.png", false);
-	_munchieRect = new Rect(0.0f, 0.0f, 12, 12);
-	_munchiePosition = new Vector2(100.0f, 100.0f);
+	_munchie->BlueTexture = new Texture2D();
+	_munchie->BlueTexture->Load("Textures/Munchie.png", false);
+	_munchie->Rect = new Rect(0.0f, 0.0f, 12, 12);
+	_munchie->Position = new Vector2(100.0f, 100.0f);
 	//_munchieInvertedTexture = new Texture2D();
 	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 	
@@ -117,21 +120,32 @@ void Player::Update(int elapsedTime)
 
 
 }
+
+/*void Player::MouseUse(Input::MouseState* state, int elapsedTime)
+{
+	if (mouseState(Input::ButtonState::LeftButton);
+	{
+
+	}
+
+
+}*/
+
 void Player::CheckViewportCollision()
 {
-	_playerSourceRect->X = _playerSourceRect->Width * player_frame;
+	_Player->SourceRect->X = _Player->SourceRect->Width * _Player->frame;
 
-	if (_playerPosition->X + _playerSourceRect->Width >= Graphics::GetViewportWidth())//right
-		_playerPosition->X = 0;
+	if (_Player->Position->X + _Player->SourceRect->Width >= Graphics::GetViewportWidth())//right
+		_Player->Position->X = 0;
 
-	if (_playerPosition->X < 0)//left
-		_playerPosition->X = Graphics::GetViewportWidth() - _playerSourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
+	if (_Player->Position->X < 0)//left
+		_Player->Position->X = Graphics::GetViewportWidth() - _Player->SourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
 
-	if (_playerPosition->Y + _playerSourceRect->Height > Graphics::GetViewportHeight())//bottom
-		_playerPosition->Y = Graphics::GetViewportHeight() - _playerSourceRect->Height;
+	if (_Player->Position->Y + _Player->SourceRect->Height > Graphics::GetViewportHeight())//bottom
+		_Player->Position->Y = Graphics::GetViewportHeight() - _Player->SourceRect->Height;
 
-	if (_playerPosition->Y < 0)//top
-		_playerPosition->Y = 0;
+	if (_Player->Position->Y < 0)//top
+		_Player->Position->Y = 0;
 
 }
 
@@ -153,9 +167,6 @@ void Player::UpdateCherry(int elapsedTime)
 	cherryRect->X = cherryRect->Width * cherry_frame;
 }
 
-
-
-
 void Player::UpdateMunchie(int elapsedTime)
 {
 
@@ -170,21 +181,21 @@ void Player::UpdateMunchie(int elapsedTime)
 		munchie_current_frame_time = 0;
 
 	}
-	_munchieRect->X = _munchieRect->Width * munchie_frame;
+	_munchie->Rect->X = _munchie->Rect->Width * munchie_frame;
 }
 
 void Player::UpdatePlayer(int elapsedTime)
 {
-	player_current_frame_time += elapsedTime;
-	_playerSourceRect->Y = _playerSourceRect->Height * player_direction;
-	if (player_current_frame_time > cplayer_frame_time)
+	_Player->current_frame_time += elapsedTime;
+	_Player->SourceRect->Y = _Player->SourceRect->Height * _Player->direction;
+	if (_Player->current_frame_time > _Player->frame_time)
 	{
-		player_frame++;
+		_Player->frame++;
 
-		if (player_frame > 2)
-			player_frame = 0;
+		if (_Player->frame > 2)
+			_Player->frame = 0;
 
-		player_current_frame_time = 0;
+		_Player->current_frame_time = 0;
 	}
 }
 
@@ -219,25 +230,25 @@ void Player::Input(int elapsedTime, Input::KeyboardState* state)
 	// Checks if D key is pressed
 	if ((state->IsKeyDown(Input::Keys::D)) || (state->IsKeyDown(Input::Keys::RIGHT))) //if D or right is pressed, the player moves to the right
 	{
-		_playerPosition->X += _cPlayerSpeed * elapsedTime; //Moves Player across X axis
-		player_direction = 3;
+		_Player->Position->X += _Player->Speed * elapsedTime; //Moves Player across X axis
+		_Player->direction = 3;
 	}
 	else if ((state->IsKeyDown(Input::Keys::W)) || (state->IsKeyDown(Input::Keys::UP)))
 	{
-		_playerPosition->Y -= _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		_Player->Position->Y -= _Player->Speed * elapsedTime; //Moves Player across X axis
 		//_playerSourceRect->Y = 96.0f;
-		player_direction = 0;
+		_Player->direction = 0;
 	}
 	else if ((state->IsKeyDown(Input::Keys::S)) || (state->IsKeyDown(Input::Keys::DOWN)))
 	{
-		_playerPosition->Y += _cPlayerSpeed * elapsedTime; //Moves Player across X axis
-		player_direction = 2;
+		_Player->Position->Y += _Player->Speed * elapsedTime; //Moves Player across X axis
+		_Player->direction = 2;
 	}
 	else if ((state->IsKeyDown(Input::Keys::A)) || (state->IsKeyDown(Input::Keys::LEFT)))
 	{
-		_playerPosition->X -= _cPlayerSpeed * elapsedTime; //Moves Player across X axis
+		_Player->Position->X -= _Player->Speed * elapsedTime; //Moves Player across X axis
 		//_playerSourceRect->Y = 64.0f;
-		player_direction = 1;
+		_Player->direction = 1;
 
 	}
 }
@@ -248,17 +259,17 @@ void Player::Draw(int elapsedTime)
 	stringstream stream;
 
 
-	stream << "Player X: " << _playerPosition->X << " Y: " << _playerPosition->Y;
+	stream << "Player X: " << _Player->Position->X << " Y: " << _Player->Position->Y;
 	
 	
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
-	SpriteBatch::Draw(_playerTexture, _playerPosition, _playerSourceRect); // Draws Player
+	SpriteBatch::Draw(_Player->Texture, _Player->Position, _Player->SourceRect); // Draws Player
 
 	if (_frameCount < 0)
 	{
 		// Draws Red Munchie
-		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 		//_frameCount++;
@@ -267,7 +278,7 @@ void Player::Draw(int elapsedTime)
 	{
 		// Draw Blue Munchie
 		//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(_munchieBlueTexture, _munchiePosition, _munchieRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//_frameCount++;
 

@@ -17,23 +17,44 @@ using namespace S2D;
 // Declares the Player class which inherits from the Game class.
 // This allows us to overload the Game class methods to help us
 // load content, draw and update our game.
+
+struct player
+{
+	Vector2* Position;
+	Rect* SourceRect;
+	Texture2D* Texture;
+	const float Speed;
+	const int frame_time;
+	player() : Speed(0.3f), frame_time(250)
+	{};
+	int direction;
+	int frame;
+	int current_frame_time;
+};
+
+struct munchie
+{
+	//int Count;
+	Rect* Rect;
+	Vector2* Position;
+	Texture2D* BlueTexture;
+	const int c_Frame_Time;
+	munchie() : c_Frame_Time(500)
+	{};
+	int current_frame_time;
+	//Texture2D* _munchieInvertedTexture;
+};
+
+
 class Player : public Game
 {
 private:
 	// Data to represent Player
-	Vector2* _playerPosition;
-	Rect* _playerSourceRect;
-	Texture2D* _playerTexture;
-	const float _cPlayerSpeed;
-	
+	player* _Player;
 	// Data to represent Munchie
+	munchie* _munchie;
+	
 	int _frameCount;
-	Rect* _munchieRect;
-	Vector2* _munchiePosition;
-	Texture2D* _munchieBlueTexture;
-	Texture2D* _munchieInvertedTexture;
-	
-	
 	//data for cherry
 	Texture2D* cherryTexture;
 	Vector2* cherryPosition;
@@ -60,10 +81,7 @@ private:
 	bool start;
 	
 	//animation variables PLAYER
-	int player_direction;
-	int player_frame;
-	int player_current_frame_time;
-	const int cplayer_frame_time;
+
 	
 	//animation variables MUNCHIE
 	const int cMunchie_Frame_Time;
@@ -96,6 +114,8 @@ public:
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 
 	void UpdateCherry(int elapsedTime);
+
+	void MouseUse(Input::MouseState* state, int elapsedTime);
 
 	/// <summary> Destroys any data associated with Player class. </summary>
 	virtual ~Player();
