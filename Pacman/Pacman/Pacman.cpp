@@ -6,7 +6,7 @@ using namespace std;
 
 
 
-Player::Player(int argc, char* argv[]) : Game(argc, argv), cCherry_frame_time(500)
+Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500), cMunchie_Frame_Time(500)
 {
 	_frameCount = 0;
 	
@@ -64,11 +64,11 @@ void Player::LoadContent()
 	//_munchieInvertedTexture = new Texture2D();
 	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 	
-	//Load Cherry
-	cherryTexture = new Texture2D();
-	cherryTexture->Load("Textures/MainCherry.png",false);
-	cherryRect = new Rect(0.0f, 0.0f, 32, 32);
-	cherryPosition = new Vector2(200.0f, 200.0f);
+	//Load bones
+	bonesTexture = new Texture2D();
+	bonesTexture->Load("Textures/BONES.png",false);
+	bonesRect = new Rect(0.0f, 0.0f, 39, 35);
+	bonesPosition = new Vector2(200.0f, 200.0f);
 
 
 
@@ -112,7 +112,7 @@ void Player::Update(int elapsedTime)
 			UpdateMunchie(elapsedTime);
 			UpdatePlayer(elapsedTime);
 			CheckViewportCollision();
-			UpdateCherry(elapsedTime);
+			Updatebones(elapsedTime);
 	    }
 		
 		
@@ -150,21 +150,21 @@ void Player::CheckViewportCollision()
 }
 
 
-void Player::UpdateCherry(int elapsedTime)
+void Player::Updatebones(int elapsedTime)
 {
 
-	cherry_current_frame_time += elapsedTime;
-	if (cherry_current_frame_time > cCherry_frame_time)
+	bones_current_frame_time += elapsedTime;
+	if (bones_current_frame_time > cbones_frame_time)
 	{
-		cherry_frame++;
+		bones_frame++;
 
-		if (cherry_frame >= 2)
-			cherry_frame = 0;
+		if (bones_frame >= 2)
+			bones_frame = 0;
 
-		cherry_current_frame_time = 0;
+		bones_current_frame_time = 0;
 
 	}
-	cherryRect->X = cherryRect->Width * cherry_frame;
+	bonesRect->X = bonesRect->Width * bones_frame;
 }
 
 void Player::UpdateMunchie(int elapsedTime)
@@ -192,7 +192,7 @@ void Player::UpdatePlayer(int elapsedTime)
 	{
 		_Player->frame++;
 
-		if (_Player->frame > 2)
+		if (_Player->frame > 3)
 			_Player->frame = 0;
 
 		_Player->current_frame_time = 0;
@@ -270,7 +270,7 @@ void Player::Draw(int elapsedTime)
 	{
 		// Draws Red Munchie
 		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 		//_frameCount++;
 	}
@@ -279,7 +279,7 @@ void Player::Draw(int elapsedTime)
 		// Draw Blue Munchie
 		//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(cherryTexture, cherryPosition, cherryRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 		//_frameCount++;
 
 		if (_frameCount >= 60)
@@ -298,7 +298,7 @@ void Player::Draw(int elapsedTime)
 		SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
 	}
 
-	//draws Cherry
+	//draws bones
 
 
 	

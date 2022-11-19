@@ -38,8 +38,8 @@ struct munchie
 	Rect* Rect;
 	Vector2* Position;
 	Texture2D* BlueTexture;
-	const int c_Frame_Time;
-	munchie() : c_Frame_Time(500)
+	const int cMunchie_Frame_Time;
+	munchie() : cMunchie_Frame_Time(500)
 	{};
 	int current_frame_time;
 	//Texture2D* _munchieInvertedTexture;
@@ -55,10 +55,10 @@ private:
 	munchie* _munchie;
 	
 	int _frameCount;
-	//data for cherry
-	Texture2D* cherryTexture;
-	Vector2* cherryPosition;
-	Rect* cherryRect;
+	//data for bones
+	Texture2D* bonesTexture;
+	Vector2* bonesPosition;
+	Rect* bonesRect;
 	
 
 	
@@ -89,11 +89,11 @@ private:
 	int munchie_current_frame_time;
 	Rect* _munchiesourceRect;
 	
-	//Cherry animation
-	const int cCherry_frame_time;
-	int cherry_frame;
-	int cherry_current_frame_time;
-	Rect* _cherrysourceRect;
+	//bones animation
+	const int cbones_frame_time;
+	int bones_frame;
+	int bones_current_frame_time;
+	Rect* _bonessourceRect;
 
 	//animation variables MUNCHIE
 
@@ -113,7 +113,7 @@ public:
 
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 
-	void UpdateCherry(int elapsedTime);
+	void Updatebones(int elapsedTime);
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
 
