@@ -1,9 +1,11 @@
 #pragma once
+#define MUNCHIECOUNT 50
 
 // If Windows and not in Debug, this will run without a console window
 // You can use this to output information when debugging using cout or cerr
 #ifdef WIN32 
 	#ifndef _DEBUG
+		
 		#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 	#endif
 #endif
@@ -32,16 +34,14 @@ struct player
 	int current_frame_time;
 };
 
-struct munchie
+struct Collectable
 {
 	//int Count;
 	Rect* Rect;
 	Vector2* Position;
 	Texture2D* BlueTexture;
-	const int cMunchie_Frame_Time;
-	munchie() : cMunchie_Frame_Time(500)
-	{};
 	int current_frame_time;
+	
 	//Texture2D* _munchieInvertedTexture;
 };
 
@@ -49,10 +49,13 @@ struct munchie
 class Player : public Game
 {
 private:
-	// Data to represent Player
+
 	player* _Player;
-	// Data to represent Munchie
-	munchie* _munchie;
+	
+	Collectable* _munchies[MUNCHIECOUNT];
+	
+	
+	
 	
 	int _frameCount;
 	//data for bones

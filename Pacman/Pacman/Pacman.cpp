@@ -10,9 +10,17 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 {
 	_frameCount = 0;
 	
+	for (int i = 0; i < MUNCHIECOUNT; i++)
+	{
+		_munchies[i] = new Collectable();
+		_munchies[i]->current_frame_time = 0;
+	}
+	
+	//_munchies = new Collectable();
+	
 	//Start player
 	_Player = new player();
-	_munchie = new munchie();
+	
 	// for PAUSE
 	_paused = false;
 	_pKeyDown = false;
@@ -27,7 +35,7 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 	_Player->frame = 0;
 	
 	//Munchie animation
-	_munchie->current_frame_time = 0;
+	
 	_frameCount = 0;
 
 	//Initialise important Game aspects
@@ -42,10 +50,15 @@ Player::~Player()
 {
 	delete _Player->Texture;
 	delete _Player->SourceRect;
-	delete _munchie->BlueTexture;
+	
 	//delete _munchieInvertedTexture;
-	delete _munchie->Rect;
+	
 	delete _Player->Position;
+	for (int i = 0; i < MUNCHIECOUNT; i++)
+	{
+		delete _munchies[i]->BlueTexture;
+		delete _munchies[i]->Rect;
+	}
 }
 
 void Player::LoadContent()
@@ -57,10 +70,19 @@ void Player::LoadContent()
 	_Player->SourceRect = new Rect(0.0f, 0.0f, 64, 64);
 
 	// Load Munchie
-	_munchie->BlueTexture = new Texture2D();
-	_munchie->BlueTexture->Load("Textures/Munchie.png", false);
-	_munchie->Rect = new Rect(0.0f, 0.0f, 12, 12);
-	_munchie->Position = new Vector2(100.0f, 100.0f);
+	
+	for  (int i = 0; i < MUNCHIECOUNT; i++)
+	{
+		_munchies[i]->BlueTexture = new Texture2D();
+		_munchies[i]->BlueTexture->Load("Textures/Munchie.png", false);
+		_munchies[i]->Rect = new Rect(0.0f, 0.0f, 12, 12);
+		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+	}
+	
+	/*_munchies->BlueTexture = new Texture2D();
+	_munchies->BlueTexture->Load("Textures/Munchie.png", false);
+	_munchies->Rect = new Rect(0.0f, 0.0f, 12, 12);
+	_munchies->Position = new Vector2(100.0f, 100.0f);*/
 	//_munchieInvertedTexture = new Texture2D();
 	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
 	
@@ -170,18 +192,23 @@ void Player::Updatebones(int elapsedTime)
 void Player::UpdateMunchie(int elapsedTime)
 {
 
-	munchie_current_frame_time += elapsedTime;
-	if (munchie_current_frame_time > cMunchie_Frame_Time)
+	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
-		munchie_frame++;
 
-		if (munchie_frame >= 2)
-			munchie_frame = 0;
 
-		munchie_current_frame_time = 0;
+		munchie_current_frame_time += elapsedTime;
+		if (munchie_current_frame_time > cMunchie_Frame_Time)
+		{
+			munchie_frame++;
 
+			if (munchie_frame >= 2)
+				munchie_frame = 0;
+
+			munchie_current_frame_time = 0;
+
+		}
+		_munchies[i]->Rect->X = _munchies[i]->Rect->Width * munchie_frame;
 	}
-	_munchie->Rect->X = _munchie->Rect->Width * munchie_frame;
 }
 
 void Player::UpdatePlayer(int elapsedTime)
@@ -266,24 +293,30 @@ void Player::Draw(int elapsedTime)
 	SpriteBatch::BeginDraw(); // Starts Drawing
 	SpriteBatch::Draw(_Player->Texture, _Player->Position, _Player->SourceRect); // Draws Player
 
-	if (_frameCount < 0)
-	{
-		// Draws Red Munchie
-		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
-		//_frameCount++;
-	}
-	else
-	{
-		// Draw Blue Munchie
-		//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(_munchie->BlueTexture, _munchie->Position, _munchie->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		//_frameCount++;
 
-		if (_frameCount >= 60)
-			_frameCount = 0;
+	for (int i = 0; i < MUNCHIECOUNT; i++)
+	{
+
+
+		if (_frameCount < 0)
+		{
+			// Draws Red Munchie
+			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
+			//_frameCount++;
+		}
+		else
+		{
+			// Draw Blue Munchie
+			//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			//_frameCount++;
+
+			if (_frameCount >= 60)
+				_frameCount = 0;
+		}
 	}
 	
 	//START
