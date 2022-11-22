@@ -41,6 +41,7 @@ struct Collectable
 	Vector2* Position;
 	Texture2D* BlueTexture;
 	int current_frame_time;
+	int frame;
 	
 	//Texture2D* _munchieInvertedTexture;
 };
@@ -51,7 +52,7 @@ class Player : public Game
 private:
 
 	player* _Player;
-	
+	Collectable* collectable;
 	Collectable* _munchies[MUNCHIECOUNT];
 	
 	
@@ -88,8 +89,8 @@ private:
 	
 	//animation variables MUNCHIE
 	const int cMunchie_Frame_Time;
-	int munchie_frame;
-	int munchie_current_frame_time;
+	//int munchie_frame;
+	
 	Rect* _munchiesourceRect;
 	
 	//bones animation
@@ -112,7 +113,7 @@ public:
 
 	void UpdatePlayer(int elapsedTime);
 
-	void UpdateMunchie(int elapsedTime);
+	void UpdateMunchie(int elapsedTime,Collectable* collectable);
 
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 

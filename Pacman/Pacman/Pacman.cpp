@@ -1,5 +1,5 @@
 #include "Player.h"
-
+#include "time.h"
 #include <sstream>
 using namespace std;
 
@@ -14,6 +14,9 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 	{
 		_munchies[i] = new Collectable();
 		_munchies[i]->current_frame_time = 0;
+		_munchies[i]->frame = rand() % 1;
+		_munchies[i]->current_frame_time = rand() % 500 + 50;
+		
 	}
 	
 	//_munchies = new Collectable();
@@ -54,11 +57,16 @@ Player::~Player()
 	//delete _munchieInvertedTexture;
 	
 	delete _Player->Position;
-	for (int i = 0; i < MUNCHIECOUNT; i++)
+	int nCount = 0;
+	delete _munchies[0]->BlueTexture;
+	for (int i = 0; nCount < MUNCHIECOUNT; i++)
 	{
-		delete _munchies[i]->BlueTexture;
-		delete _munchies[i]->Rect;
+
+		delete _munchies[nCount]->Rect;
+		delete _munchies[nCount]->Position;
+		delete _munchies[nCount];
 	}
+	delete[]_munchies;
 }
 
 void Player::LoadContent()
@@ -71,10 +79,13 @@ void Player::LoadContent()
 
 	// Load Munchie
 	
+	Texture2D* munchieTex = new Texture2D();
+	munchieTex->Load("Textures/Munchie.png",false);
+	
 	for  (int i = 0; i < MUNCHIECOUNT; i++)
 	{
-		_munchies[i]->BlueTexture = new Texture2D();
-		_munchies[i]->BlueTexture->Load("Textures/Munchie.png", false);
+	
+		_munchies[i]->BlueTexture = munchieTex;
 		_munchies[i]->Rect = new Rect(0.0f, 0.0f, 12, 12);
 		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
@@ -117,6 +128,7 @@ void Player::Update(int elapsedTime)
 	// Gets the current state of the keyboard
 	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
 	Input::MouseState* mouse_state = Input::Mouse::GetState();
+	
 
 	if (!start)
 	{
@@ -131,10 +143,15 @@ void Player::Update(int elapsedTime)
 		if (!_paused)
 		{
 			Input(elapsedTime, keyboardState);
-			UpdateMunchie(elapsedTime);
+
 			UpdatePlayer(elapsedTime);
 			CheckViewportCollision();
 			Updatebones(elapsedTime);
+
+			for (int i = 0; i < MUNCHIECOUNT; i++)
+			{
+				UpdateMunchie(elapsedTime, _munchies[i]);
+			}
 	    }
 		
 		
@@ -189,25 +206,25 @@ void Player::Updatebones(int elapsedTime)
 	bonesRect->X = bonesRect->Width * bones_frame;
 }
 
-void Player::UpdateMunchie(int elapsedTime)
+void Player::UpdateMunchie(int elapsedTime, Collectable* collectable)
 {
 
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
 
 
-		munchie_current_frame_time += elapsedTime;
-		if (munchie_current_frame_time > cMunchie_Frame_Time)
+		collectable->current_frame_time += elapsedTime;
+		if (collectable->current_frame_time > cMunchie_Frame_Time)
 		{
-			munchie_frame++;
+			collectable->frame++;
 
-			if (munchie_frame >= 2)
-				munchie_frame = 0;
+			if (collectable->frame >= 2)
+				collectable->frame = 0;
 
-			munchie_current_frame_time = 0;
+			collectable->current_frame_time = 0;
 
 		}
-		_munchies[i]->Rect->X = _munchies[i]->Rect->Width * munchie_frame;
+		_munchies[i]->Rect->X = _munchies[i]->Rect->Width * collectable->frame;
 	}
 }
 
