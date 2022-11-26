@@ -83,6 +83,15 @@ private:
 	Vector2* start_string_position;
 	bool space_key_down;
 	bool start;
+
+	int x1;
+	int y1;
+	int width1;
+	int height1;
+	int x2;
+	int y2;
+	int width2;
+	int height2;
 	
 	//animation variables PLAYER
 
@@ -120,6 +129,8 @@ public:
 	void Updatebones(int elapsedTime);
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
+
+	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2);
 
 	/// <summary> Destroys any data associated with Player class. </summary>
 	virtual ~Player();

@@ -187,7 +187,26 @@ void Player::CheckViewportCollision()
 		_Player->Position->Y = 0;
 
 }
+bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2)
+{
+	int left1 = x1, left2 = x2;
+	int right1 = x1 + width1, right2 = x2 + width2;
+	int top1 = y1, top2 = y2;
+	int bottom1 = y1 + height1, bottom2 = y2 + height2;
 
+	if (bottom1 < top2)
+		return false;
+	if (top1 > bottom2)
+		return false;
+	if (right1 < left2)
+		return false;
+	if (left1 > right2)
+		return false;
+	
+	return true;
+	
+
+}
 
 void Player::Updatebones(int elapsedTime)
 {
@@ -225,6 +244,8 @@ void Player::UpdateMunchie(int elapsedTime, Collectable* collectable)
 
 		}
 		_munchies[i]->Rect->X = _munchies[i]->Rect->Width * collectable->frame;
+		CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2);
+			
 	}
 }
 
