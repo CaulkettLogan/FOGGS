@@ -37,7 +37,7 @@ struct player
 struct Collectable
 {
 	//int Count;
-	Rect* Rect;
+	Rect* SourceRect;
 	Vector2* Position;
 	Texture2D* BlueTexture;
 	int current_frame_time;
@@ -130,7 +130,7 @@ public:
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
 
-	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2);
+	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable);
 
 	/// <summary> Destroys any data associated with Player class. </summary>
 	virtual ~Player();

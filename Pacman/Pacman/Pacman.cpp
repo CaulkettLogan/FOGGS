@@ -62,7 +62,7 @@ Player::~Player()
 	for (int i = 0; nCount < MUNCHIECOUNT; i++)
 	{
 
-		delete _munchies[nCount]->Rect;
+		delete _munchies[nCount]->SourceRect;
 		delete _munchies[nCount]->Position;
 		delete _munchies[nCount];
 	}
@@ -86,7 +86,7 @@ void Player::LoadContent()
 	{
 	
 		_munchies[i]->BlueTexture = munchieTex;
-		_munchies[i]->Rect = new Rect(0.0f, 0.0f, 12, 12);
+		_munchies[i]->SourceRect = new Rect(0.0f, 0.0f, 12, 12);
 		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
 	
@@ -187,30 +187,35 @@ void Player::CheckViewportCollision()
 		_Player->Position->Y = 0;
 
 }
-bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2)
+bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable)
 {
-	int left1 = x1, left2 = x2;
-	int right1 = x1 + width1, right2 = x2 + width2;
-	int top1 = y1, top2 = y2;
-	int bottom1 = y1 + height1, bottom2 = y2 + height2;
+	for (int i = 0; i < MUNCHIECOUNT; i++)
+	{
 
-	if (bottom1 < top2)
-		return false;
-	if (top1 > bottom2)
-		return false;
-	if (right1 < left2)
-		return false;
-	if (left1 > right2)
-		return false;
-	
-	return true;
-	
+		int left1 = _Player->Position->X, left2 = _munchies[i]->Position->X;//collision for left side
+		int right1 = _Player->Position->X + _Player->SourceRect->Width, right2 = _munchies[i]->Position->X + _munchies[i]->SourceRect->Width;//collision for the right side
+		int top1 = _Player->Position->Y, top2 = _munchies[i]->Position->Y;//collision for the right
+		int bottom1 = _Player->Position->Y + _Player->SourceRect->Height, bottom2 = _munchies[i]->Position->Y + _munchies[i]->SourceRect->Height;//collision for the bottom
+
+		//ways collision could happen
+		if (bottom1 < top2)
+			return false; // if it returns false, collision made
+		if (top1 > bottom2)
+			return false;
+		if (right1 < left2)
+			return false;
+		if (left1 > right2)
+			return false;//_Player->Position = new Vector2(350.0f, 350.0f);
+		
+
+		return true;
+	}
 
 }
 
 void Player::Updatebones(int elapsedTime)
 {
-
+	//update bones every frame
 	bones_current_frame_time += elapsedTime;
 	if (bones_current_frame_time > cbones_frame_time)
 	{
@@ -232,19 +237,19 @@ void Player::UpdateMunchie(int elapsedTime, Collectable* collectable)
 	{
 
 
-		collectable->current_frame_time += elapsedTime;
-		if (collectable->current_frame_time > cMunchie_Frame_Time)
+		_munchies[i]->current_frame_time += elapsedTime;
+		if (_munchies[i]->current_frame_time > cMunchie_Frame_Time)
 		{
-			collectable->frame++;
+			_munchies[i]->frame++;
 
-			if (collectable->frame >= 2)
-				collectable->frame = 0;
+			if (_munchies[i]->frame >= 2)
+				_munchies[i]->frame = 0;
 
-			collectable->current_frame_time = 0;
+			_munchies[i]->current_frame_time = 0;
 
 		}
-		_munchies[i]->Rect->X = _munchies[i]->Rect->Width * collectable->frame;
-		CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2);
+		_munchies[i]->SourceRect->X = _munchies[i]->SourceRect->Width * _munchies[i]->frame;
+		CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2,  _munchies[i]);
 			
 	}
 }
@@ -339,7 +344,7 @@ void Player::Draw(int elapsedTime)
 		if (_frameCount < 0)
 		{
 			// Draws Red Munchie
-			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->SourceRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 			//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 			//_frameCount++;
@@ -348,7 +353,7 @@ void Player::Draw(int elapsedTime)
 		{
 			// Draw Blue Munchie
 			//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->SourceRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 			//_frameCount++;
 
