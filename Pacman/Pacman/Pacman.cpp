@@ -150,7 +150,7 @@ void Player::Update(int elapsedTime)
 
 			for (int i = 0; i < MUNCHIECOUNT; i++)
 			{
-				UpdateMunchie(elapsedTime, _munchies[i]);
+				UpdateMunchie(elapsedTime, _munchies[i], nCount);
 			}
 	    }
 		
@@ -189,13 +189,20 @@ void Player::CheckViewportCollision()
 }
 bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable)
 {
-	for (int i = 0; i < MUNCHIECOUNT; i++)
-	{
+	//for (int i = 0; i < MUNCHIECOUNT; i++)
+	//{
 
-		int left1 = _Player->Position->X, left2 = _munchies[i]->Position->X;//collision for left side
-		int right1 = _Player->Position->X + _Player->SourceRect->Width, right2 = _munchies[i]->Position->X + _munchies[i]->SourceRect->Width;//collision for the right side
-		int top1 = _Player->Position->Y, top2 = _munchies[i]->Position->Y;//collision for the right
-		int bottom1 = _Player->Position->Y + _Player->SourceRect->Height, bottom2 = _munchies[i]->Position->Y + _munchies[i]->SourceRect->Height;//collision for the bottom
+		int left1 = _Player->Position->X;
+		int left2 = collectable->Position->X;//collision for left side
+
+		int right1 = _Player->Position->X + _Player->SourceRect->Width;
+		int right2 = collectable->Position->X + collectable->SourceRect->Width;//collision for the right side
+
+		int top1 = _Player->Position->Y;
+		int top2 = collectable->Position->Y;//collision for the right
+
+		int bottom1 = _Player->Position->Y + _Player->SourceRect->Height;
+		int bottom2 = collectable->Position->Y + collectable->SourceRect->Height;//collision for the bottom
 
 		//ways collision could happen
 		if (bottom1 < top2)
@@ -205,11 +212,12 @@ bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int
 		if (right1 < left2)
 			return false;
 		if (left1 > right2)
-			return false;//_Player->Position = new Vector2(350.0f, 350.0f);
+			return false;//
+		  _Player->Position = new Vector2(350.0f, 350.0f); //to check if collision works
 		
 
 		return true;
-	}
+//	}
 
 }
 
@@ -230,7 +238,7 @@ void Player::Updatebones(int elapsedTime)
 	bonesRect->X = bonesRect->Width * bones_frame;
 }
 
-void Player::UpdateMunchie(int elapsedTime, Collectable* collectable)
+void Player::UpdateMunchie(int elapsedTime, Collectable* collectable, int nCount)
 {
 
 	for (int i = 0; i < MUNCHIECOUNT; i++)
@@ -249,8 +257,13 @@ void Player::UpdateMunchie(int elapsedTime, Collectable* collectable)
 
 		}
 		_munchies[i]->SourceRect->X = _munchies[i]->SourceRect->Width * _munchies[i]->frame;
-		CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2,  _munchies[i]);
+
+		if (CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _munchies[i]))
+		{
 			
+		}
+
+	
 	}
 }
 

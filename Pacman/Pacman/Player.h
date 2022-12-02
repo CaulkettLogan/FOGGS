@@ -54,6 +54,7 @@ private:
 	player* _Player;
 	Collectable* collectable;
 	Collectable* _munchies[MUNCHIECOUNT];
+	int nCount;
 	
 	
 	
@@ -122,7 +123,7 @@ public:
 
 	void UpdatePlayer(int elapsedTime);
 
-	void UpdateMunchie(int elapsedTime,Collectable* collectable);
+	void UpdateMunchie(int elapsedTime,Collectable* collectable, int nCount);
 
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 
