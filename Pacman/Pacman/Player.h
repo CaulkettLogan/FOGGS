@@ -1,5 +1,6 @@
 #pragma once
 #define MUNCHIECOUNT 50
+#define BONECOUNT 5
 
 // If Windows and not in Debug, this will run without a console window
 // You can use this to output information when debugging using cout or cerr
@@ -25,13 +26,14 @@ struct player
 	Vector2* Position;
 	Rect* SourceRect;
 	Texture2D* Texture;
-	const float Speed;
+	float Speed;
 	const int frame_time;
-	player() : Speed(0.3f), frame_time(250)
+	player() : frame_time(250)
 	{};
 	int direction;
 	int frame;
 	int current_frame_time;
+	int Tscore;
 };
 
 struct Collectable
@@ -42,9 +44,24 @@ struct Collectable
 	Texture2D* BlueTexture;
 	int current_frame_time;
 	int frame;
+	int Score;
 	
 	//Texture2D* _munchieInvertedTexture;
 };
+
+struct Bone
+{
+	int frame;
+	int current_frame_time;
+	Rect* sourceRect;
+	Texture2D* Texture;
+	Vector2* Position;
+	Rect* Rect;
+	float speedIncrease;
+	int waitTime;
+};
+
+
 
 
 class Player : public Game
@@ -55,18 +72,16 @@ private:
 	Collectable* collectable;
 	Collectable* _munchies[MUNCHIECOUNT];
 	int nCount;
-	
-	
-	
+	Bone* bone;
+	Bone* _powerUps[BONECOUNT];
 	
 	int _frameCount;
 	//data for bones
-	Texture2D* bonesTexture;
-	Vector2* bonesPosition;
-	Rect* bonesRect;
-	
 
 	
+	const int cbone_buff_count;
+	int Tscore;
+	int BoneScore;
 	
 	// Position for String
 	Vector2* _stringPosition;
@@ -93,6 +108,8 @@ private:
 	int y2;
 	int width2;
 	int height2;
+
+	
 	
 	//animation variables PLAYER
 
@@ -105,9 +122,7 @@ private:
 	
 	//bones animation
 	const int cbones_frame_time;
-	int bones_frame;
-	int bones_current_frame_time;
-	Rect* _bonessourceRect;
+
 
 	//animation variables MUNCHIE
 
@@ -121,7 +136,7 @@ public:
 
 	void CheckViewportCollision();
 
-	void UpdatePlayer(int elapsedTime);
+	void UpdatePlayer(int elapsedTime, Bone*bone);
 
 	void UpdateMunchie(int elapsedTime,Collectable* collectable, int nCount);
 
@@ -131,8 +146,11 @@ public:
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
 
-	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable);
+	bool MunchieCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable);
+	bool BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime);
 
+	void ScoreInc(Collectable*collectable);
+	void PlayerBuff(Bone* bone, int elapsedTime);
 	/// <summary> Destroys any data associated with Player class. </summary>
 	virtual ~Player();
 
@@ -143,5 +161,6 @@ public:
 	void virtual Update(int elapsedTime);
 
 	/// <summary> Called every frame - draw game here. </summary>
-	void virtual Draw(int elapsedTime);
+	void virtual Draw(int elapsedTime); //Score*score);
+
 };

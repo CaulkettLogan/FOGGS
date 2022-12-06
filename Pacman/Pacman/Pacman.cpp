@@ -1,44 +1,64 @@
 #include "Player.h"
 #include "time.h"
 #include <sstream>
+#include <thread>
+#include <chrono>
 using namespace std;
+using namespace std::this_thread; //sleep_for, sleep_until
+using namespace std::chrono_literals;//for units
+using std::chrono::system_clock;
 
 
 
 
-Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500), cMunchie_Frame_Time(500)
+
+Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500), cMunchie_Frame_Time(500), cbone_buff_count(3000)
 {
 	_frameCount = 0;
-	
+
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
 		_munchies[i] = new Collectable();
 		_munchies[i]->current_frame_time = 0;
 		_munchies[i]->frame = rand() % 1;
 		_munchies[i]->current_frame_time = rand() % 500 + 50;
-		
+
 	}
-	
+	for (int i = 0; i < BONECOUNT; i++)
+	{
+		_powerUps[i] = new Bone();
+		_powerUps[i]->current_frame_time = 0;
+		_powerUps[i]->frame = rand() % 1;
+		_powerUps[i]->current_frame_time = rand() % 500 + 50;
+		_powerUps[i]->speedIncrease = 0.2;
+		_powerUps[i]->waitTime = 2;
+
+	}
+
 	//_munchies = new Collectable();
-	
+
 	//Start player
 	_Player = new player();
-	
+	_Player->Tscore = 0;
+	_Player->Speed = 0.2;
+
+
+
 	// for PAUSE
 	_paused = false;
 	_pKeyDown = false;
-	
+
 	//FOR START
 	space_key_down = false;
 	start = false;
-	
+
 	//for Player animatoin
 	_Player->direction = 0;
 	_Player->current_frame_time = 0;
 	_Player->frame = 0;
-	
+
 	//Munchie animation
-	
+
 	_frameCount = 0;
 
 	//Initialise important Game aspects
@@ -67,6 +87,16 @@ Player::~Player()
 		delete _munchies[nCount];
 	}
 	delete[]_munchies;
+	
+	int pCount = 0;
+	delete _powerUps[0]->Texture;
+	for (int i = 0; pCount < BONECOUNT; i++)
+	{
+		delete _powerUps[pCount]->Rect;
+		delete _powerUps[pCount]->Position;
+		delete _powerUps[pCount];
+	}
+	delete[] _powerUps;
 }
 
 void Player::LoadContent()
@@ -89,19 +119,18 @@ void Player::LoadContent()
 		_munchies[i]->SourceRect = new Rect(0.0f, 0.0f, 12, 12);
 		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
-	
-	/*_munchies->BlueTexture = new Texture2D();
-	_munchies->BlueTexture->Load("Textures/Munchie.png", false);
-	_munchies->Rect = new Rect(0.0f, 0.0f, 12, 12);
-	_munchies->Position = new Vector2(100.0f, 100.0f);*/
-	//_munchieInvertedTexture = new Texture2D();
-	//_munchieInvertedTexture->Load("Textures/MunchieInverted.tga", true);
-	
+
 	//Load bones
-	bonesTexture = new Texture2D();
-	bonesTexture->Load("Textures/BONES.png",false);
-	bonesRect = new Rect(0.0f, 0.0f, 39, 35);
-	bonesPosition = new Vector2(200.0f, 200.0f);
+	Texture2D* boneTex = new Texture2D();
+	boneTex->Load("Textures/BONES.png", false);
+	
+	for (int i = 0; i < BONECOUNT; i++)
+	{
+
+		_powerUps[i]->Texture = boneTex;
+		_powerUps[i]->Rect = new Rect(0.0f, 0.0f, 39, 35);
+		_powerUps[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+	}
 
 
 
@@ -144,9 +173,10 @@ void Player::Update(int elapsedTime)
 		{
 			Input(elapsedTime, keyboardState);
 
-			UpdatePlayer(elapsedTime);
+			UpdatePlayer(elapsedTime,bone);
 			CheckViewportCollision();
 			Updatebones(elapsedTime);
+
 
 			for (int i = 0; i < MUNCHIECOUNT; i++)
 			{
@@ -187,10 +217,8 @@ void Player::CheckViewportCollision()
 		_Player->Position->Y = 0;
 
 }
-bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable)
+bool Player::MunchieCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable)
 {
-	//for (int i = 0; i < MUNCHIECOUNT; i++)
-	//{
 
 		int left1 = _Player->Position->X;
 		int left2 = collectable->Position->X;//collision for left side
@@ -213,29 +241,79 @@ bool Player::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int
 			return false;
 		if (left1 > right2)
 			return false;//
-		  _Player->Position = new Vector2(350.0f, 350.0f); //to check if collision works
+		  collectable->Position = new Vector2(1000.0f, 1000.0f); //to check if collision works
 		
 
 		return true;
-//	}
+
+
+}
+
+bool Player::BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime)
+{
+
+	int left1 = _Player->Position->X;
+	int left2 = bone->Position->X;//collision for left side
+
+	int right1 = _Player->Position->X + _Player->SourceRect->Width;
+	int right2 = bone->Position->X + bone->Rect->Width;//collision for the right side
+
+	int top1 = _Player->Position->Y;
+	int top2 = bone->Position->Y;//collision for the right
+
+	int bottom1 = _Player->Position->Y + _Player->SourceRect->Height;
+	int bottom2 = bone->Position->Y + bone->Rect->Height;//collision for the bottom
+
+	//ways collision could happen
+	if (bottom1 < top2)
+		return false; // if it returns false, collision made
+	if (top1 > bottom2)
+		return false;
+	if (right1 < left2)
+		return false;
+	if (left1 > right2)
+		return false;//
+	bone->Position = new Vector2(500.0f, 1000.0f); //to check if collision works
+	_Player->Speed = _Player->Speed + bone->speedIncrease;
+
+	
+	
+		_Player->Speed = 0.2;
+	
+	
+	return true;
+
 
 }
 
 void Player::Updatebones(int elapsedTime)
 {
 	//update bones every frame
-	bones_current_frame_time += elapsedTime;
-	if (bones_current_frame_time > cbones_frame_time)
+	for (int i = 0; i < BONECOUNT; i++)
 	{
-		bones_frame++;
 
-		if (bones_frame >= 2)
-			bones_frame = 0;
 
-		bones_current_frame_time = 0;
+		_powerUps[i]->current_frame_time += elapsedTime;
+		if (_powerUps[i]->current_frame_time > cbones_frame_time)
+		{
+			_powerUps[i]->frame++;
 
+			if (_powerUps[i]->frame >= 2)
+				_powerUps[i]->frame = 0;
+
+			_powerUps[i]->current_frame_time = 0;
+
+		}
+		_powerUps[i]->Rect->X = _powerUps[i]->Rect->Width * _powerUps[i]->frame;
+
+		
+			if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime));
+			{
+				
+
+			}
+		
 	}
-	bonesRect->X = bonesRect->Width * bones_frame;
 }
 
 void Player::UpdateMunchie(int elapsedTime, Collectable* collectable, int nCount)
@@ -258,16 +336,17 @@ void Player::UpdateMunchie(int elapsedTime, Collectable* collectable, int nCount
 		}
 		_munchies[i]->SourceRect->X = _munchies[i]->SourceRect->Width * _munchies[i]->frame;
 
-		if (CollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _munchies[i]))
+		if (MunchieCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _munchies[i]))
 		{
-			
+			ScoreInc(collectable);
 		}
 
 	
 	}
 }
 
-void Player::UpdatePlayer(int elapsedTime)
+
+void Player::UpdatePlayer(int elapsedTime,Bone*bone)
 {
 	_Player->current_frame_time += elapsedTime;
 	_Player->SourceRect->Y = _Player->SourceRect->Height * _Player->direction;
@@ -279,6 +358,29 @@ void Player::UpdatePlayer(int elapsedTime)
 			_Player->frame = 0;
 
 		_Player->current_frame_time = 0;
+	}
+
+
+}
+
+
+void Player::ScoreInc(Collectable*collectable)
+{
+	collectable->Score = 2;
+
+	_Player->Tscore = _Player->Tscore + collectable->Score;
+
+}	
+
+void Player::PlayerBuff(Bone* bone, int elapsedTime)
+{
+	for (int i = 0; i < BONECOUNT; i++)
+	{
+		if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime));
+		{
+			_Player->Speed = _Player->Speed * _powerUps[i]->speedIncrease;
+
+		}
 	}
 }
 
@@ -336,18 +438,21 @@ void Player::Input(int elapsedTime, Input::KeyboardState* state)
 	}
 }
 
-void Player::Draw(int elapsedTime)
+void Player::Draw(int elapsedTime)//)
 {
 	// Allows us to easily create a string
 	stringstream stream;
 
 
-	stream << "Player X: " << _Player->Position->X << " Y: " << _Player->Position->Y;
+	stream << "Player X: " << _Player->Position->X << " Y: " << _Player->Position->Y<<endl;
+	
+	stream << " Score:" << _Player->Tscore << "    speed: " << _Player->Speed;
 	
 	
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
 	SpriteBatch::Draw(_Player->Texture, _Player->Position, _Player->SourceRect); // Draws Player
+	
 
 
 	for (int i = 0; i < MUNCHIECOUNT; i++)
@@ -358,18 +463,33 @@ void Player::Draw(int elapsedTime)
 		{
 			// Draws Red Munchie
 			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->SourceRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-			//SpriteBatch::Draw(_munchieBlueTexture, _playerPosition, _playerSourceRect);
 			//_frameCount++;
 		}
 		else
 		{
 			// Draw Blue Munchie
-			//SpriteBatch::Draw(_munchieBlueTexture, _munchieRect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->SourceRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-			SpriteBatch::Draw(bonesTexture, bonesPosition, bonesRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			SpriteBatch::Draw(_munchies[i]->BlueTexture, _munchies[i]->Position, _munchies[i]->SourceRect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);	
 			//_frameCount++;
+			if (_frameCount >= 60)
+				_frameCount = 0;
+		}
+	}
 
+
+	for (int i = 0; i < BONECOUNT; i++)
+	{
+
+
+		if (_frameCount < 0)
+		{
+			SpriteBatch::Draw(_powerUps[i]->Texture, _powerUps[i]->Position, _powerUps[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+
+			//_frameCount++;
+		}
+		else
+		{
+			SpriteBatch::Draw(_powerUps[i]->Texture, _powerUps[i]->Position, _powerUps[i]->Rect, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+			//_frameCount++;
 			if (_frameCount >= 60)
 				_frameCount = 0;
 		}
