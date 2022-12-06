@@ -1,6 +1,7 @@
 #pragma once
 #define MUNCHIECOUNT 50
 #define BONECOUNT 5
+#define GHOSTCOUNT 1
 
 // If Windows and not in Debug, this will run without a console window
 // You can use this to output information when debugging using cout or cerr
@@ -26,6 +27,9 @@ struct player
 	Vector2* Position;
 	Rect* SourceRect;
 	Texture2D* Texture;
+	Vector2* deadPos;
+	Texture2D* deadTexture;
+	Rect* deadRect;
 	float Speed;
 	const int frame_time;
 	player() : frame_time(250)
@@ -34,6 +38,7 @@ struct player
 	int frame;
 	int current_frame_time;
 	int Tscore;
+	bool dead;
 };
 
 struct Collectable
@@ -61,6 +66,15 @@ struct Bone
 	int waitTime;
 };
 
+struct MovingEnemy
+{
+	Vector2* position;
+	Texture2D* texture;
+	Rect* sourceRect;
+	int direction;
+	float speed;
+};
+
 
 
 
@@ -74,6 +88,7 @@ private:
 	int nCount;
 	Bone* bone;
 	Bone* _powerUps[BONECOUNT];
+	MovingEnemy* _ghosts[GHOSTCOUNT];
 	
 	int _frameCount;
 	//data for bones
@@ -145,9 +160,11 @@ public:
 	void Updatebones(int elapsedTime);
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
-
+	
+	void CheckGhostCollision();
+	void UpdateGhost(MovingEnemy*, int elapsedTime);
 	bool MunchieCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable);
-	bool BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime);
+	bool BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime, int cbone_buff_count);
 
 	void ScoreInc(Collectable*collectable);
 	void PlayerBuff(Bone* bone, int elapsedTime);
@@ -162,5 +179,5 @@ public:
 
 	/// <summary> Called every frame - draw game here. </summary>
 	void virtual Draw(int elapsedTime); //Score*score);
-
+	
 };

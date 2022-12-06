@@ -3,6 +3,7 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <random>
 using namespace std;
 using namespace std::this_thread; //sleep_for, sleep_until
 using namespace std::chrono_literals;//for units
@@ -16,14 +17,20 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 {
 	_frameCount = 0;
 
+	_ghosts[0] = new MovingEnemy();
+	_ghosts[0]->direction = 0;
+	_ghosts[0]->speed = 0.1f;
+
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
+
 		_munchies[i] = new Collectable();
 		_munchies[i]->current_frame_time = 0;
 		_munchies[i]->frame = rand() % 1;
 		_munchies[i]->current_frame_time = rand() % 500 + 50;
-
+		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
+
 	for (int i = 0; i < BONECOUNT; i++)
 	{
 		_powerUps[i] = new Bone();
@@ -32,6 +39,7 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 		_powerUps[i]->current_frame_time = rand() % 500 + 50;
 		_powerUps[i]->speedIncrease = 0.2;
 		_powerUps[i]->waitTime = 2;
+		_powerUps[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 
 	}
 
@@ -41,6 +49,7 @@ Player::Player(int argc, char* argv[]) : Game(argc, argv), cbones_frame_time(500
 	_Player = new player();
 	_Player->Tscore = 0;
 	_Player->Speed = 0.2;
+	_Player->dead = false;
 
 
 
@@ -97,6 +106,16 @@ Player::~Player()
 		delete _powerUps[pCount];
 	}
 	delete[] _powerUps;
+
+	int gCount = 0;
+	delete _ghosts[0]->texture;
+	for (int i = 0; gCount < GHOSTCOUNT; i++)
+	{
+		delete _ghosts[gCount]->sourceRect;
+		delete _ghosts[gCount]->position;
+		delete _ghosts[gCount];
+	}
+	delete[] _ghosts;
 }
 
 void Player::LoadContent()
@@ -106,19 +125,30 @@ void Player::LoadContent()
 	_Player->Texture->Load("Textures/skeleton.png", false);
 	_Player->Position = new Vector2(350.0f, 350.0f);
 	_Player->SourceRect = new Rect(0.0f, 0.0f, 64, 64);
-
-	// Load Munchie
 	
+	_Player->deadTexture = new Texture2D();
+	_Player->deadTexture->Load("Textures/Death.png", false);
+	_Player->deadPos = new Vector2(350.0f, 350.0f);
+	_Player->deadRect = new Rect(0.0f, 0.0f, 30, 45);
+	
+	// Load Munchie
 	Texture2D* munchieTex = new Texture2D();
 	munchieTex->Load("Textures/Munchie.png",false);
 	
 	for  (int i = 0; i < MUNCHIECOUNT; i++)
-	{
-	
+	{	
 		_munchies[i]->BlueTexture = munchieTex;
 		_munchies[i]->SourceRect = new Rect(0.0f, 0.0f, 12, 12);
 		_munchies[i]->Position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 	}
+	
+	//Load Enemy
+	_ghosts[0]->texture = new Texture2D();
+	_ghosts[0]->texture->Load("Textures/GhostBlue.png", false);
+	_ghosts[0]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+	_ghosts[0]->sourceRect = new Rect(0.0f, 0.0f, 20, 20);
+
+	
 
 	//Load bones
 	Texture2D* boneTex = new Texture2D();
@@ -159,10 +189,17 @@ void Player::Update(int elapsedTime)
 	Input::MouseState* mouse_state = Input::Mouse::GetState();
 	
 
+
+	
 	if (!start)
 	{
 		CheckStart(keyboardState, Input::Keys::SPACE);
 
+	}
+	else if (_Player->dead)
+	{
+		Sleep(3000);
+		exit(4);
 	}
 	else
 	{
@@ -173,7 +210,9 @@ void Player::Update(int elapsedTime)
 		{
 			Input(elapsedTime, keyboardState);
 
-			UpdatePlayer(elapsedTime,bone);
+			UpdatePlayer(elapsedTime, bone);
+			UpdateGhost(_ghosts[0], elapsedTime);
+			CheckGhostCollision();
 			CheckViewportCollision();
 			Updatebones(elapsedTime);
 
@@ -182,12 +221,31 @@ void Player::Update(int elapsedTime)
 			{
 				UpdateMunchie(elapsedTime, _munchies[i], nCount);
 			}
-	    }
-		
-		
+		}
+
+	
 	}
+	
 
-
+}
+void Player::UpdateGhost(MovingEnemy* ghost, int elapsedTime)
+{
+	if (ghost->direction==0)
+	{
+		ghost->position->X += ghost->speed * elapsedTime;
+	}
+	else if (ghost->direction == 1)
+	{
+		ghost->position->X += ghost->speed * elapsedTime;
+	}
+	if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())
+	{
+		ghost->direction = 1;
+	}
+	else if (ghost->position->X <= 0)
+	{
+		ghost->direction = 0;
+	}
 }
 
 /*void Player::MouseUse(Input::MouseState* state, int elapsedTime)
@@ -216,6 +274,18 @@ void Player::CheckViewportCollision()
 	if (_Player->Position->Y < 0)//top
 		_Player->Position->Y = 0;
 
+	//Ghos
+	if (_ghosts[0]->position->X + _ghosts[0]->sourceRect->Width >= Graphics::GetViewportWidth())//right
+		_ghosts[0]->position->X = 0;
+
+	if (_ghosts[0]->position->X < 0)//left
+		_ghosts[0]->position->X = Graphics::GetViewportWidth() - _ghosts[0]->sourceRect->Width; //Graphics::GetViewportWidth() - _playerSourceRect->Width;
+
+
+
+
+
+
 }
 bool Player::MunchieCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Collectable* collectable)
 {
@@ -242,14 +312,21 @@ bool Player::MunchieCollisionCheck(int x1, int y1, int width1, int height1, int 
 		if (left1 > right2)
 			return false;//
 		  collectable->Position = new Vector2(1000.0f, 1000.0f); //to check if collision works
-		
+		  _Player->Speed = _Player->Speed + 0.01f;
 
 		return true;
 
 
 }
 
-bool Player::BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime)
+/*void timer(player* _Player, Bone* bone)
+{
+	_Player->Speed = _Player->Speed + bone->speedIncrease;
+	Sleep(3000);
+	_Player->Speed = 0.2;
+}*/
+
+bool Player::BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, Bone* bone, int elapsedTime,int cbone_buff_count)
 {
 
 	int left1 = _Player->Position->X;
@@ -273,18 +350,20 @@ bool Player::BoneCollisionCheck(int x1, int y1, int width1, int height1, int x2,
 		return false;
 	if (left1 > right2)
 		return false;//
+	//_Player->Speed = _Player->Speed + bone->speedIncrease;
 	bone->Position = new Vector2(500.0f, 1000.0f); //to check if collision works
 	_Player->Speed = _Player->Speed + bone->speedIncrease;
+	//thread timer1(timer, _Player, bone);
+	
+//	timer1.join();
+	
 
-	
-	
-		_Player->Speed = 0.2;
-	
 	
 	return true;
-
-
 }
+
+
+
 
 void Player::Updatebones(int elapsedTime)
 {
@@ -307,7 +386,7 @@ void Player::Updatebones(int elapsedTime)
 		_powerUps[i]->Rect->X = _powerUps[i]->Rect->Width * _powerUps[i]->frame;
 
 		
-			if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime));
+			if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime,cbone_buff_count));
 			{
 				
 
@@ -344,6 +423,33 @@ void Player::UpdateMunchie(int elapsedTime, Collectable* collectable, int nCount
 	
 	}
 }
+void Player::CheckGhostCollision()
+{
+	int i = 0;
+	int bottom1 = _Player->Position->Y + _Player->SourceRect->Height;
+	int bottom2 = 0;
+	int left1 = _Player->Position->X;
+	int left2 = 0;
+	int right1 = _Player->Position->X + _Player->SourceRect->Width;
+	int right2 = 0;
+	int top1 = _Player->Position->Y;
+	int top2 = 0;
+
+	for (i = 0; i < GHOSTCOUNT; i++)
+	{
+		bottom2 = _ghosts[i]->position->Y + _ghosts[i]->sourceRect->Height;
+		left2 = _ghosts[i]->position->X;
+		right2 = _ghosts[i]->position->X + _ghosts[i]->sourceRect->Width;
+		top2 = _ghosts[i]->position->Y;
+
+		if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2) && (left1 < right2))
+		{
+			_Player->dead = true;
+			i = GHOSTCOUNT;
+		}
+	}
+
+}
 
 
 void Player::UpdatePlayer(int elapsedTime,Bone*bone)
@@ -360,7 +466,7 @@ void Player::UpdatePlayer(int elapsedTime,Bone*bone)
 		_Player->current_frame_time = 0;
 	}
 
-
+	
 }
 
 
@@ -376,7 +482,7 @@ void Player::PlayerBuff(Bone* bone, int elapsedTime)
 {
 	for (int i = 0; i < BONECOUNT; i++)
 	{
-		if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime));
+		if (BoneCollisionCheck(x1, y1, width1, height1, x2, y2, width2, height2, _powerUps[i], elapsedTime,cbone_buff_count));
 		{
 			_Player->Speed = _Player->Speed * _powerUps[i]->speedIncrease;
 
@@ -495,6 +601,21 @@ void Player::Draw(int elapsedTime)//)
 		}
 	}
 	
+	if (_Player->dead)
+	{
+		_Player->Texture = _Player->deadTexture;
+		_Player->SourceRect = _Player->deadRect;
+		_Player->Speed = 0;
+		
+
+		stringstream menu_stream;
+		menu_stream << "YOU DIED!";
+
+		SpriteBatch::Draw(_menuBackground, _menuRectangle, nullptr);
+		SpriteBatch::DrawString(menu_stream.str().c_str(), _menuStringPosition, Color::Red);
+		//SpriteBatch::Draw(_Player->deadTexture,_Player->deadPos, _Player->deadRect);
+		
+	}
 	//START
 	if (!start)
 	{
@@ -507,7 +628,8 @@ void Player::Draw(int elapsedTime)//)
 		SpriteBatch::DrawString(start_stream.str().c_str(), start_string_position, Color::Red);
 	}
 
-	//draws bones
+	//DRAW GHOST
+	SpriteBatch::Draw(_ghosts[0]->texture, _ghosts[0]->position, _ghosts[0]->sourceRect);
 
 
 	
