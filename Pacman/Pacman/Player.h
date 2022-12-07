@@ -1,7 +1,7 @@
 #pragma once
 #define MUNCHIECOUNT 50
 #define BONECOUNT 5
-#define GHOSTCOUNT 1
+#define GHOSTCOUNT 5
 
 // If Windows and not in Debug, this will run without a console window
 // You can use this to output information when debugging using cout or cerr
@@ -73,6 +73,8 @@ struct MovingEnemy
 	Rect* sourceRect;
 	int direction;
 	float speed;
+	int current_frame_time;
+	int frame;
 };
 
 
@@ -88,12 +90,13 @@ private:
 	int nCount;
 	Bone* bone;
 	Bone* _powerUps[BONECOUNT];
+	MovingEnemy* ghost;
 	MovingEnemy* _ghosts[GHOSTCOUNT];
 	
 	int _frameCount;
 	//data for bones
 
-	
+	const int cGhost_frame_time;
 	const int cbone_buff_count;
 	int Tscore;
 	int BoneScore;
@@ -125,7 +128,10 @@ private:
 	int height2;
 
 	
-	
+	SoundEffect* nom;
+	SoundEffect* deadS;
+	SoundEffect* bonepickup;
+
 	//animation variables PLAYER
 
 	
@@ -157,7 +163,7 @@ public:
 
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 
-	void Updatebones(int elapsedTime);
+	void Updatebones(int elapsedTime, SoundEffect* nom);
 
 	void MouseUse(Input::MouseState* state, int elapsedTime);
 	
